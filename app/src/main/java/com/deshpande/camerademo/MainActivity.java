@@ -6,9 +6,9 @@ import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.media.Image;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -18,26 +18,25 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.SocketAddress;
 
+import java.io.BufferedReader;
+import java.io.File;
+
+import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
 
     private Button takePictureButton;
+    private Button choseFromLibrary;
     private ImageView imageView;
     private Uri file;
     private Camera camera;
     private int cameraId = 0;
-
+    RetrieveFeedTask task=null;
+    PrintWriter pw;
+    BufferedReader br;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
 
         takePictureButton = (Button) findViewById(R.id.button_image);
         imageView = (ImageView) findViewById(R.id.imageview);
+        choseFromLibrary = (Button) findViewById(R.id.button2_image);
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             takePictureButton.setEnabled(false);
@@ -68,6 +68,9 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         startActivityForResult(intent, 100);
+         this.task = (RetrieveFeedTask) new RetrieveFeedTask().execute();
+        this.pw = this.task.getPw();
+        this.br = this.task.getBr();
 
     }
     @Override
@@ -86,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra(MediaStore.EXTRA_OUTPUT, file);
 
         startActivityForResult(intent, 100);
-        this.sendPictureToServer(null);
+        this.sendPictureToServer(file);
 
     }
 
@@ -110,7 +113,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == 100) {
             if (resultCode == RESULT_OK) {
-                imageView.getMatrix();
             }
         }
     }
@@ -130,11 +132,13 @@ public class MainActivity extends AppCompatActivity {
         }
         return cameraId;
     }
-    public void sendPictureToServer(Image image)
+    public void sendPictureToServer(Uri image)
     {
-        new RetrieveFeedTask().execute();
+        imageView.getMatrix();
 
-            }
+        this.pw.write("A");
+        this.pw.flush();
+    }
 
 
 
